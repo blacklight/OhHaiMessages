@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:id="@+id/textView" android:text="@string/tvDefaultContent"/>
+<RadioButton android:id="@+id/btButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/bluetooth"></RadioButton>
+<RadioButton android:id="@+id/wifiButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/wifi"></RadioButton>
+<TextView android:id="@+id/listenPortText" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/listenPortText"></TextView>
+<EditText android:layout_height="wrap_content" android:layout_width="match_parent" android:text="@string/defaultListenPort" android:id="@+id/listenPortEdit"></EditText>
+<Button android:id="@+id/okButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ok"></Button>
+<Button android:id="@+id/quitButton" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/quit"></Button>
+</LinearLayout>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, AndroidTest!</string>
+    <string name="app_name">OhHaiMessagesServer</string>
+    <string name="tvDefaultContent">Please select the connection type you want to use for receiving messages data</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="wifi">WiFi</string>
+    <string name="ok">Ok</string>
+    <string name="listenPortText">Listen on port:</string>
+    <string name="defaultListenPort">4444</string>
+    <string name="quit">Quit</string>
+</resources>
