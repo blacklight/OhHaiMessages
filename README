@@ -1,0 +1,66 @@
+===================================================
+OhHaiMessages
+A text messages interface for Android, from your pc
+===================================================
+
+Do you have an Android device? Do you feel yourself uncomfortable to write text
+messages on your tiny touch screen keyboard? Are you a command line geek and you
+always wished to send texts through your Android device with the same easiness
+of typing 'echo "text" | sms dest_number'? Then OhHaiMessages is just made for
+you.
+
+OhHaiMessages consists in two applications:
+
+- A Java-developed server, that runs as application on your Android device and
+accepts requests for sending text messages;
+
+- A Python-developed client, that runs on your pc and allows you to send text
+messages from the command line through a simple command.
+
+First of all, you need to copy and install the OhHaiMessagesServer.apk file onto
+your Android device. It will be installed as a new application. You just start
+it and choose between the two available wireless interfaces that can be used for
+letting your device and your pc communicate:
+
+- WiFi: fast and reliable, but it requires your pc and your device to be in the
+same network. On the server running on your device you should provide the port
+to listen onto (default: 4444), and on the pc you provide the IP address of your
+device and the port;
+
+- Bluetooth: slower and less reliable, but it does not require your devices to
+be in the same network, or accessible via public IP address. Note that before
+starting a communication between the devices based on bluetooth you should
+ensure that your Android device IS IN DISCOVERABLE MODE (otherwise the client
+will not be able to discover the service) and they are not too far away.
+
+After choosing one of the two modes on the server, your Android is ready to
+accept incoming connections and send text messages.
+
+Now it's time for the client. Just use the file ohhaiclient.py, preferably
+copying it somewhere in your PATH and renaming it so something like 'sms'. The
+usage is quite simple:
+
+echo "text message" | ohlohclient.py
+        <-n|--number destination_number>
+        [-h|--host wifi_host_address]
+        [-p|--port wifi_host_port (default:4444)]
+        [-s|--service bluetooth_service_name (default:OhHaiMessages)]
+        [-u|--uuid bluetooth_uuid (default:828b721e-8e88-276b-6c29-0987f79bdc21)]
+        [-l|--logfile logfile_path (default: $HOME/.ohhaimessages)]
+        [-w|--wifi]
+        [-b|--bluetooth]
+
+Mandatory fields:
+
+	* -n|--number : Phone number that will receive your text message;
+	* -w|--wifi, -b|--bluetooth : One of the two modes should be specified, in
+	order to let the client know whether to communicate over a WiFi or a
+	Bluetooth interface to the server;
+	* -h|--host : This field is mandatory if you specified a WiFi connection,
+	and it specifies the IP address or hostname of your Android device running
+	the server.
+
+Have fun.
+by Fabio "BlackLight" Manganiello <blacklight@autistici.org>, http://0x00.ath.cx
+2011
+
