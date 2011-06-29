@@ -96,9 +96,8 @@ while True :
 text = text.strip()
 
 if len (text) > 160 :
-	print >> sys.stderr, "The text you provided is %d characters long, that's more than the maximum limit of 160 characters. \
-Your Android mobile will never accept it sorry :(" % (len(text))
-	sys.exit(1)
+	print >> sys.stderr, "The text you provided is %d characters long, that's more than the sms limit of 160 characters. \
+It will be splitted in more messages" % (len(text))
 
 xmlRequest = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<ohhairequest>\n\t<number>%s</number>\n\t<text><![CDATA[%s]]></text>\n</ohhairequest>\n" % (number, text)
 request = "Content-Length: %d\n\n%s" % (len(xmlRequest), xmlRequest)

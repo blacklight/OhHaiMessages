@@ -1,7 +1,12 @@
 package org.blacklight.ohhai.server;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.*;
+
+import android.content.ContentValues;
+import android.net.Uri;
 import android.telephony.SmsManager;
 import org.blacklight.ohhai.xml.*;
 import org.blacklight.ohhai.socket.*;
@@ -10,11 +15,13 @@ public class OhHaiServer extends Thread {
 	private BufferedReader in;
 	private PrintWriter out;
 	private OhHaiSocket sock;
+	private OhHaiService service;
 	
-	public OhHaiServer (OhHaiSocket sock)
+	public OhHaiServer (OhHaiSocket sock, OhHaiService service)
 		throws IOException
 	{
 		this.sock = sock;
+		this.service = service;
 		in = sock.getInputStream();
 		out = sock.getOutputStream();
 		OhHaiProgram.addMessage("Connection established from " + sock.getAddress(), out, null);
@@ -79,11 +86,20 @@ public class OhHaiServer extends Thread {
 		
 		try
 		{
-        	SmsManager sm = SmsManager.getDefault();
-        	sm.sendTextMessage(number, null, text, null, null);
+        	SmsManager sms = SmsManager.getDefault();
+        	ArrayList<String> parts = sms.divideMessage(text);
+        	sms.sendMultipartTextMessage(number, null, parts, null, null);
         	
-        	String msg = "Text successfully sent";
-        	OhHaiProgram.addMessage(msg, out, null);
+        	ContentValues values = new ContentValues();
+        	values.put("address", number);
+        	values.put("date", new Date().getTime());
+        	values.put("read", 1);
+        	values.put("body", text);
+        	service.getContentResolver().insert(Uri.parse("content://sms/sent"), values);
+        	service.notifyMessage("OhHai SMS service", "SMS text successfully sent to " + number);
+			
+        	String msg = "Text successfully sent to " + number;
+        	OhHaiProgram.addMessage(msg, out, null, true);
         	
         	in.close();
         	out.close();
@@ -92,8 +108,8 @@ public class OhHaiServer extends Thread {
 		
 		catch (Exception e)
 		{
-			String msg = "Error while attempting to send the message: " + e.toString();
-			OhHaiProgram.addMessage(msg, out, e);
+			String msg = "Error while attempting to send the message to " + number + ": " + e.toString();
+			OhHaiProgram.addMessage(msg, out, e, true);
 		}
 	}
 }
