@@ -40,7 +40,7 @@ Now it's time for the client. Just use the file ohhaiclient.py, preferably
 copying it somewhere in your PATH and renaming it so something like 'sms'. The
 usage is quite simple:
 
-echo "text message" | ohlohclient.py
+echo "text message" | ohhaiclient.py
         <-n|--number destination_number>
         [-h|--host wifi_host_address]
         [-p|--port wifi_host_port (default:4444)]
