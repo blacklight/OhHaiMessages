@@ -7,6 +7,8 @@ import java.net.SocketException;
 import java.util.Enumeration;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.*;
@@ -20,7 +22,9 @@ import org.blacklight.ohhai.socket.*;
  */
 public class OhHaiProgram extends Activity implements Serializable {
 	private final static long serialVersionUID = -4209208543883385035L;
-	private final static String defaultLogFile = "/mnt/sdcard/OhHaiMessagesLog.txt";
+	private final static String appDir = "/mnt/sdcard/ohhaisms";
+	private final static String logFile = "OhHaiLog.txt";
+	private final static String pwdFile = "passwd";
 	private static OhHaiServerSocket.ServerSocketType socketType;
 	private static int listenPort;
 	
@@ -46,6 +50,10 @@ public class OhHaiProgram extends Activity implements Serializable {
 	{
 		String stacktrace = "";
 		
+		if (getPasswd() == null)
+			text = "Warning: no password has been set. We strongly recommend you " +
+				"to set one through ohhaiclient -s option\n" + text;
+		
 		if (e != null)
 		{
 			StringWriter result = new StringWriter();
@@ -60,7 +68,7 @@ public class OhHaiProgram extends Activity implements Serializable {
 		try
 		{
 			BufferedWriter file = new BufferedWriter(
-				new FileWriter(defaultLogFile, true)
+				new FileWriter(appDir + "/" + logFile, true)
 			);
 			
 			file.write(text + "\n");
@@ -85,6 +93,18 @@ public class OhHaiProgram extends Activity implements Serializable {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
+		try
+		{
+			if (!(new File(appDir)).exists())
+				new File(appDir).mkdirs();
+		}
+		
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+			System.exit(1);
+		}
+		
 		tvListenPort = (TextView) findViewById(R.id.listenPortText);
 		tvListenPort.setVisibility(View.INVISIBLE);
 		
@@ -201,4 +221,49 @@ public class OhHaiProgram extends Activity implements Serializable {
     
     public static OhHaiServerSocket.ServerSocketType getSocketType()  { return socketType; }
     public static int getListenPort()  { return listenPort; }
+    
+    public void showAlert (String msg)
+    {
+	    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	    
+	    builder.setMessage(msg)
+	           .setCancelable(false)
+	           .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	               public void onClick(DialogInterface dialog, int id) {
+	                    OhHaiProgram.this.finish();
+	               }
+	           }).create();
+    }
+    
+    public static String getPasswd()
+    {
+    	try
+    	{
+    		BufferedReader in = new BufferedReader(new FileReader(appDir + "/" + pwdFile));
+    		String pwd = in.readLine();
+    		in.close();
+    		return pwd;
+    	}
+    	
+    	catch (Exception e)
+    	{
+    		return null;
+    	}
+    }
+    
+    public static void changePasswd (String newPasswd)
+    	throws IOException
+    {
+    	try
+    	{
+    		BufferedWriter out = new BufferedWriter (new FileWriter(appDir + "/" + pwdFile));
+    		out.write(newPasswd + "\n");
+    		out.close();
+    	}
+    	
+    	catch (Exception e)
+    	{
+    		throw new IOException ("Unable to change the password");
+    	}
+    }
 }

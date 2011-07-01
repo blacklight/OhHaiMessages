@@ -12,6 +12,7 @@
 
 import bluetooth
 import getopt
+import hashlib
 import os
 import socket
 import sys
@@ -24,16 +25,21 @@ service = "OhHaiMessages"
 uuid = "828b721e-8e88-276b-6c29-0987f79bdc21"
 logfile = os.getenv("HOME") + "/.ohhaimessages"
 number = None
+text = None
+password = None
+newpassword = None
 
 def usage() :
 	global port, service, uuid
 
 	print >> sys.stderr, "Usage: echo \"text message\" | %s\n\t<-n|--number destination_number>\n\t[-h|--host wifi_host_address] \
+\n\t[-S|--set-password <new_password>] [-P|--password <password>] \
 \n\t[-p|--port wifi_host_port (default:%d)]\n\t[-s|--service bluetooth_service_name (default:%s)]\n\t[-u|--uuid bluetooth_uuid (default:%s)] \
 \n\t[-l|--logfile logfile_path (default: $HOME/.ohhaimessages)]\n\t[-w|--wifi]\n\t[-b|--bluetooth]\n" % (sys.argv[0], port, service, uuid)
 
 try :
-	optlist, args = getopt.getopt (sys.argv[1:], "n:h:p:s:u:l:wb", ["number=", "host=", "port=", "service=", "uuid=", "logfile=", "wifi", "bluetooth"])
+	optlist, args = getopt.getopt (sys.argv[1:], "n:h:p:s:u:l:S:P:wb", ["number=", "host=", "port=", "service=", "uuid=", \
+		"logfile=", "set-passord", "password", "wifi", "bluetooth"])
 except getopt.GetoptError, err :
 	print str(err)
 	usage()
@@ -66,13 +72,12 @@ for o, a in optlist :
 			sys.exit(1)
 		else :
 			connType = "bt"
+	elif o in ("-S", "--set-password") :
+		newpassword = a
+	elif o in ("-P", "--password") :
+		password = a
 	else :
 		assert False, "Unhandled option"
-
-if not number :
-	print >> sys.stderr, "No destination number specified"
-	usage()
-	sys.exit(1)
 
 if connType == "wifi" :
 	if not addr :
@@ -84,22 +89,47 @@ elif not connType :
 	usage()
 	sys.exit(1)
 
-text = ""
+if password :
+	password = hashlib.sha1(password).hexdigest()
 
-while True :
-	line = sys.stdin.readline().strip()
-	text += line + "\n"
+if newpassword :
+	# Password change
+	newpassword = hashlib.sha1(newpassword).hexdigest()
+	xmlRequest = '<?xml version="1.0" encoding="UTF-8"?>\n\n<ohhairequest>\n\t<setpassword>%s</setpassword>\n' % (newpassword)
 
-	if line == "" :
-		break
+	if password :
+		xmlRequest += '\t<password>' + password + '</password>\n'
 
-text = text.strip()
+	xmlRequest += '</ohhairequest>\n'
+elif not number :
+	# Not a password change, not a valid text
+	print >> sys.stderr, "No destination number specified"
+	usage()
+	sys.exit(1)
+else :
+	# Not a password change but a text sending
+	text = ""
 
-if len (text) > 160 :
-	print >> sys.stderr, "The text you provided is %d characters long, that's more than the sms limit of 160 characters. \
-It will be splitted in more messages" % (len(text))
+	while True :
+		line = sys.stdin.readline().strip()
+		text += line + "\n"
 
-xmlRequest = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<ohhairequest>\n\t<number>%s</number>\n\t<text><![CDATA[%s]]></text>\n</ohhairequest>\n" % (number, text)
+		if line == "" :
+			break
+
+	text = text.strip()
+
+	if len (text) > 160 :
+		print >> sys.stderr, "The text you provided is %d characters long, that's more than the sms limit of 160 characters. \
+	It will be splitted in more messages" % (len(text))
+
+	xmlRequest = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<ohhairequest>\n\t<number>%s</number>\n\t<text><![CDATA[%s]]></text>\n" % (number, text)
+
+	if password :
+		xmlRequest += '\t<password>' + password + '</password>\n'
+
+	xmlRequest += '</ohhairequest>\n'
+
 request = "Content-Length: %d\n\n%s" % (len(xmlRequest), xmlRequest)
 
 if connType == "wifi" :
@@ -144,10 +174,11 @@ sock.close()
 ltime = time.localtime()
 strtime = "%.2d/%.2d/%.4d, %.2d:%.2d:%.2d" % (ltime.tm_mday, ltime.tm_mon, ltime.tm_year, ltime.tm_hour, ltime.tm_min, ltime.tm_sec)
 
-try :
-	f = open (logfile, "a")
-	f.write ("[%s]\nTo: %s\n\t%s\n\n" % (strtime, number, text))
-	f.close()
-except :
-	print >> sys.stderr, "Warning: could not write to the log file ", logfile
+if text and number :
+	try :
+		f = open (logfile, "a")
+		f.write ("[%s]\nTo: %s\n\t%s\n\n" % (strtime, number, text))
+		f.close()
+	except :
+		print >> sys.stderr, "Warning: could not write to the log file ", logfile
 

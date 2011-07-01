@@ -52,6 +52,9 @@ public class OhHaiServer extends Thread {
 			{
 				String msg = "Invalid content-length specified: " + contentLength;
 				OhHaiProgram.addMessage(msg, out, null);
+				in.close();
+				out.close();
+				sock.close();
 				return;
 			}
 		
@@ -64,6 +67,7 @@ public class OhHaiServer extends Thread {
 		{
 			String msg = "Error while reading from the client: " + e.toString();
 			OhHaiProgram.addMessage(msg, out, e);
+			out.close();
 			return;
 		}
 		
@@ -73,6 +77,54 @@ public class OhHaiServer extends Thread {
 		try
 		{
 			RequestParser parser = new RequestParser(xmlRequest);
+			String curPassword = OhHaiProgram.getPasswd();
+			
+			if (curPassword != null)
+			{
+				String password = parser.getPassword();
+				
+				if (password == null)
+				{
+					OhHaiProgram.addMessage("A password is required in order to use OhHai service " +
+						"but no password was provided", out, null);
+					
+					in.close();
+					out.close();
+					sock.close();
+					return;
+				}
+				
+				if (!password.equals(curPassword))
+				{
+					OhHaiProgram.addMessage("The provided password is wrong", out, null);
+					in.close();
+					out.close();
+					sock.close();
+					return;
+				}
+			}
+			
+			String newPassword = parser.getSetPassword();
+			
+			if (newPassword != null)
+			{
+				try
+				{
+					OhHaiProgram.changePasswd(newPassword);
+					OhHaiProgram.addMessage("Password successfully modified", out, null);
+				}
+				
+				catch (IOException e)
+				{
+					OhHaiProgram.addMessage("Unable to change the password", out, e);
+				}
+				
+				in.close();
+				out.close();
+				sock.close();
+				return;
+			}
+			
 			number = parser.getNumber();
 			text = parser.getText();
 		}

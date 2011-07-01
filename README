@@ -43,6 +43,7 @@ usage is quite simple:
 echo "text message" | ohhaiclient.py
         <-n|--number destination_number>
         [-h|--host wifi_host_address]
+	   [-S|--set-password <new_password>] [-P|--password <password>] 
         [-p|--port wifi_host_port (default:4444)]
         [-s|--service bluetooth_service_name (default:OhHaiMessages)]
         [-u|--uuid bluetooth_uuid (default:828b721e-8e88-276b-6c29-0987f79bdc21)]
@@ -59,6 +60,23 @@ Mandatory fields:
 	* -h|--host : This field is mandatory if you specified a WiFi connection,
 	and it specifies the IP address or hostname of your Android device running
 	the server.
+
+Strongly suggested field:
+	* -P|--password : It's better when you set a password for your OhHai server
+	installation, otherwise anyone connected to your mobile's same WiFi network
+	or in bluetooth visibility could send text messages through your mobile.
+	You can set the password on the first time by running the command:
+
+	ohhaiclient.py [bluetooth or wifi settings] -S yourpassword
+
+	Then on the following times you're going to send your texts by specifying
+	something like:
+
+	ohhaiclient.py [bluetooth or wifi settings] -P yourpassword
+
+	If you want to change your password, just use something like:
+
+	ohhaiclient.py [bluetooth or wifi settings] -P oldpassword -S newpassword
 
 Have fun.
 by Fabio "BlackLight" Manganiello <blacklight@autistici.org>, http://0x00.ath.cx
