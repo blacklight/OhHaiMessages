@@ -52,7 +52,7 @@ public class OhHaiProgram extends Activity implements Serializable {
 		
 		if (getPasswd() == null)
 			text = "Warning: no password has been set. We strongly recommend you " +
-				"to set one through ohhaiclient -s option\n" + text;
+				"to set one through ohhaiclient -S option\n" + text;
 		
 		if (e != null)
 		{

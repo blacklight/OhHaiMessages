@@ -9,6 +9,7 @@ import android.content.ContentValues;
 import android.net.Uri;
 import android.telephony.SmsManager;
 import org.blacklight.ohhai.xml.*;
+import org.blacklight.ohhai.reader.SmsReader;
 import org.blacklight.ohhai.socket.*;
 
 public class OhHaiServer extends Thread {
@@ -35,6 +36,7 @@ public class OhHaiServer extends Thread {
 		String xmlRequest = "";
 		int contentLength = -1;
 		
+		// Read Content-Length
 		try
 		{
 			do
@@ -71,6 +73,7 @@ public class OhHaiServer extends Thread {
 			return;
 		}
 		
+		// Read the request
 		String number = "";
 		String text = "";
 		
@@ -79,6 +82,7 @@ public class OhHaiServer extends Thread {
 			RequestParser parser = new RequestParser(xmlRequest);
 			String curPassword = OhHaiProgram.getPasswd();
 			
+			// Manage the password
 			if (curPassword != null)
 			{
 				String password = parser.getPassword();
@@ -104,6 +108,7 @@ public class OhHaiServer extends Thread {
 				}
 			}
 			
+			// Manage password change
 			String newPassword = parser.getSetPassword();
 			
 			if (newPassword != null)
@@ -125,6 +130,22 @@ public class OhHaiServer extends Thread {
 				return;
 			}
 			
+			// Manage get messages
+			int getMessages = parser.getReadMessages();
+			
+			if (getMessages != -1)
+			{
+				SmsReader smsread = new SmsReader (service.getContentResolver(), out);
+				
+				for (String msg : smsread.getSms())
+				{
+					OhHaiProgram.addMessage(msg + "\n\n", out, null);
+				}
+				
+				return;
+			}
+			
+			// Manage send SMS
 			number = parser.getNumber();
 			text = parser.getText();
 		}

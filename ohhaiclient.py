@@ -28,18 +28,20 @@ number = None
 text = None
 password = None
 newpassword = None
+read_messages = None
 
 def usage() :
 	global port, service, uuid
 
 	print >> sys.stderr, "Usage: echo \"text message\" | %s\n\t<-n|--number destination_number>\n\t[-h|--host wifi_host_address] \
 \n\t[-S|--set-password <new_password>] [-P|--password <password>] \
+\n\t[-r|--read-messages n_messages (default: all)] \
 \n\t[-p|--port wifi_host_port (default:%d)]\n\t[-s|--service bluetooth_service_name (default:%s)]\n\t[-u|--uuid bluetooth_uuid (default:%s)] \
 \n\t[-l|--logfile logfile_path (default: $HOME/.ohhaimessages)]\n\t[-w|--wifi]\n\t[-b|--bluetooth]\n" % (sys.argv[0], port, service, uuid)
 
 try :
-	optlist, args = getopt.getopt (sys.argv[1:], "n:h:p:s:u:l:S:P:wb", ["number=", "host=", "port=", "service=", "uuid=", \
-		"logfile=", "set-passord", "password", "wifi", "bluetooth"])
+	optlist, args = getopt.getopt (sys.argv[1:], "n:h:p:s:u:l:S:P:r:wb", ["number=", "host=", "port=", "service=", "uuid=", \
+		"logfile=", "set-passord", "password", "read-messages=", "wifi", "bluetooth"])
 except getopt.GetoptError, err :
 	print str(err)
 	usage()
@@ -76,6 +78,8 @@ for o, a in optlist :
 		newpassword = a
 	elif o in ("-P", "--password") :
 		password = a
+	elif o in ("-r", "--read-messages") :
+		read_messages = a if a else -1;
 	else :
 		assert False, "Unhandled option"
 
@@ -101,8 +105,16 @@ if newpassword :
 		xmlRequest += '\t<password>' + password + '</password>\n'
 
 	xmlRequest += '</ohhairequest>\n'
+elif read_messages :
+	# Read messages request
+	xmlRequest = '<?xml version="1.0" encoding="UTF-8"?>\n\n<ohhairequest>\n\t<getmessages>%d</getmessages>\n' % (int(read_messages))
+
+	if password :
+		xmlRequest += '\t<password>' + password + '</password>\n'
+
+	xmlRequest += '</ohhairequest>\n'
 elif not number :
-	# Not a password change, not a valid text
+	# Not a password change, not a read messages request, not a valid text
 	print >> sys.stderr, "No destination number specified"
 	usage()
 	sys.exit(1)

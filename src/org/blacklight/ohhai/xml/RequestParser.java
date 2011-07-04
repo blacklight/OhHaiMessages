@@ -11,13 +11,14 @@ public class RequestParser {
 	private String msgText = null;
 	private String password = null;
 	private String setPassword = null;
+	private int readMessages = -1;
 	
 	public RequestParser(String xmlString)
 		throws IOException, SAXException, ParserConfigurationException, ParserException
 	{
 		InputSource is = new InputSource();
 		is.setCharacterStream(new StringReader(xmlString));
-		boolean hasNumber = false, hasText = false, hasSetPassword = false;
+		boolean hasNumber = false, hasText = false, hasSetPassword = false, hasGetMessages = false;
 		
 		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
 		
@@ -56,9 +57,19 @@ public class RequestParser {
 		
 		catch (Exception e)  {}
 		
-		if (!(hasNumber && hasText) && !hasSetPassword)
+		try
 		{
-			throw new ParserException ("The fields number, text or setpassword were not correctly filled");
+			hasGetMessages = true;
+			readMessages = -1;
+			Element numberNode = (Element) document.getElementsByTagName("getmessages").item(0);
+			readMessages = Integer.parseInt(numberNode.getTextContent());
+		}
+		
+		catch (Exception e)  { readMessages = -1; }
+		
+		if (!(hasNumber && hasText) && !hasSetPassword && !hasGetMessages)
+		{
+			throw new ParserException ("The fields number, text, getmessages or setpassword were not correctly filled");
 		}
 	}
 	
@@ -81,4 +92,10 @@ public class RequestParser {
 	{
 		return setPassword;
 	}
+	
+	public int getReadMessages()
+	{
+		return readMessages;
+	}
 }
+
