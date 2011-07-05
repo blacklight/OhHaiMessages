@@ -53,7 +53,7 @@ for o, a in optlist :
 	elif o in ("-h", "--host") :
 		addr = a
 	elif o in ("-p", "--port") :
-		port = a
+		port = int(a)
 	elif o in ("-s", "--service") :
 		service = a
 	elif o in ("-u", "--uuid") :
