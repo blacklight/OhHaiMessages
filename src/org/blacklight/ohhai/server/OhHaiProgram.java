@@ -77,7 +77,7 @@ public class OhHaiProgram extends Activity implements Serializable {
 			
 			if (out != null)
 			{
-				out.write(text + "\n");
+				out.write(text);
 				out.flush();
 			}
 		}

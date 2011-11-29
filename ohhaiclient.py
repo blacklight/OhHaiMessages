@@ -79,7 +79,7 @@ for o, a in optlist :
 	elif o in ("-P", "--password") :
 		password = a
 	elif o in ("-r", "--read-messages") :
-		read_messages = a if a else -1;
+		read_messages = a if a else -1
 	else :
 		assert False, "Unhandled option"
 

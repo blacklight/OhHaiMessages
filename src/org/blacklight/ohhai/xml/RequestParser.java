@@ -11,7 +11,11 @@ public class RequestParser {
 	private String msgText = null;
 	private String password = null;
 	private String setPassword = null;
-	private int readMessages = -1;
+	private String readQuery = null;
+	private String orderQuery = null;
+	private String contactByDisplayName = null;
+	private String contactByNumber = null;
+	private int readCount = 0;
 	
 	public RequestParser(String xmlString)
 		throws IOException, SAXException, ParserConfigurationException, ParserException
@@ -60,14 +64,49 @@ public class RequestParser {
 		try
 		{
 			hasGetMessages = true;
-			readMessages = -1;
+			readQuery = null;
 			Element numberNode = (Element) document.getElementsByTagName("getmessages").item(0);
-			readMessages = Integer.parseInt(numberNode.getTextContent());
+			readQuery = numberNode.getTextContent();
 		}
 		
-		catch (Exception e)  { readMessages = -1; }
+		catch (Exception e)  { readQuery = null; hasGetMessages = false; }
 		
-		if (!(hasNumber && hasText) && !hasSetPassword && !hasGetMessages)
+		try
+		{
+			orderQuery = null;
+			Element numberNode = (Element) document.getElementsByTagName("order").item(0);
+			orderQuery = numberNode.getTextContent();
+		}
+		
+		catch (Exception e)  { orderQuery = null; }
+		
+		try
+		{
+			contactByDisplayName = null;
+			Element numberNode = (Element) document.getElementsByTagName("get_contact_info_by_display_name").item(0);
+			contactByDisplayName = numberNode.getTextContent();
+		}
+		
+		catch (Exception e)  { contactByDisplayName = null; }
+		
+		try
+		{
+			contactByNumber = null;
+			Element numberNode = (Element) document.getElementsByTagName("get_contact_info_by_number").item(0);
+			contactByNumber = numberNode.getTextContent();
+		}
+		
+		catch (Exception e)  { contactByNumber = null; }
+		
+		try
+		{
+			Element numberNode = (Element) document.getElementsByTagName("count").item(0);
+			readCount = Integer.parseInt(numberNode.getTextContent());
+		}
+		
+		catch (Exception e)  {}
+		
+		if (!(hasNumber && hasText) && !hasSetPassword && !hasGetMessages && contactByDisplayName == null && contactByNumber == null)
 		{
 			throw new ParserException ("The fields number, text, getmessages or setpassword were not correctly filled");
 		}
@@ -93,9 +132,28 @@ public class RequestParser {
 		return setPassword;
 	}
 	
-	public int getReadMessages()
+	public String getReadQuery()
 	{
-		return readMessages;
+		return readQuery;
+	}
+	
+	public String getOrderQuery()
+	{
+		return orderQuery;
+	}
+	
+	public int getReadCount()
+	{
+		return readCount;
+	}
+	
+	public String getContactByDisplayName()
+	{
+		return contactByDisplayName;
+	}
+	
+	public String getContactByNumber()
+	{
+		return contactByNumber;
 	}
 }
-

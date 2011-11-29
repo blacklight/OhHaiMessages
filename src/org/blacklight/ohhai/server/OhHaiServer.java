@@ -1,15 +1,17 @@
 package org.blacklight.ohhai.server;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.*;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.net.Uri;
+import android.provider.ContactsContract.PhoneLookup;
 import android.telephony.SmsManager;
 import org.blacklight.ohhai.xml.*;
-import org.blacklight.ohhai.reader.SmsReader;
 import org.blacklight.ohhai.socket.*;
 
 public class OhHaiServer extends Thread {
@@ -131,15 +133,105 @@ public class OhHaiServer extends Thread {
 			}
 			
 			// Manage get messages
-			int getMessages = parser.getReadMessages();
+			String readQuery = parser.getReadQuery();
 			
-			if (getMessages != -1)
+			if (readQuery != null)
 			{
-				SmsReader smsread = new SmsReader (service.getContentResolver(), out);
+				int readCount = parser.getReadCount();
+				String orderQuery = parser.getOrderQuery();
 				
-				for (String msg : smsread.getSms())
+				if (readQuery.equals("*"))
+					readQuery = null;
+				
+				if (orderQuery == null)
+					orderQuery = "date DESC";
+				
+				Cursor cur = service.getApplicationContext().getContentResolver().query (
+					Uri.parse("content://sms/inbox"),
+					new String[] { "_id", "thread_id", "address", "person", "date", "body" },
+					readQuery,
+					null,
+					orderQuery
+				);
+				
+				
+				if (cur != null)
 				{
-					OhHaiProgram.addMessage(msg + "\n\n", out, null);
+					try
+					{
+						cur.moveToFirst();
+						int i = 0;
+						
+						while (cur != null)
+						{
+							//long msgId = cur.getLong(0);
+							//long threadId = cur.getLong(1);
+							String address = cur.getString(2);
+							//long contactId = cur.getLong(3);
+							String timestamp = new SimpleDateFormat("yyyy.MM.dd, HH:mm:ss").format(new Date(cur.getLong(4)));
+							String body = cur.getString(5);
+							OhHaiProgram.addMessage(
+								"\nReceived from: " + address + " at " + timestamp + "\n\t" + body, out, null);
+							
+							if (!cur.moveToNext() || (readCount > 0 && ++i >= readCount))
+								break;
+						}
+						
+						return;
+					}
+					
+					finally
+					{
+						cur.close();
+						in.close();
+						out.close();
+						sock.close();
+					}
+				} else {
+					return;
+				}
+			}
+			
+			// Manage get contact info
+			String contactByDisplayName = parser.getContactByDisplayName();
+			String contactByNumber = parser.getContactByNumber();
+			
+			if (contactByDisplayName != null || contactByNumber != null)
+			{
+				Uri lookup = null;
+				
+				if (contactByDisplayName != null)
+					lookup = Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI, Uri.encode(contactByDisplayName));
+				else
+					lookup = Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI, Uri.encode(contactByNumber));
+				
+				Cursor cur = service.getApplicationContext().getContentResolver().
+					query(lookup, new String[]{
+						PhoneLookup.DISPLAY_NAME, PhoneLookup.HAS_PHONE_NUMBER, PhoneLookup.NUMBER},
+						null, null, null);
+				
+				try
+				{
+					while (cur.moveToNext())
+					{
+				        String dispName = cur.getString(cur.getColumnIndexOrThrow(PhoneLookup.DISPLAY_NAME));
+				        String hasNumber = cur.getString(cur.getColumnIndexOrThrow(PhoneLookup.HAS_PHONE_NUMBER));
+				        String phoneNumber = null;
+				        
+				        if (!hasNumber.equals("0"))
+				        {
+				        	phoneNumber = cur.getString(cur.getColumnIndexOrThrow(PhoneLookup.NUMBER));
+				        }
+				        
+				        OhHaiProgram.addMessage("Display name: " + dispName + "\n" +
+				        	"Number: " + ((phoneNumber == null) ? "(none)" : phoneNumber) + "\n",
+				        	out, null);
+					}
+				}
+				
+				finally
+				{
+					cur.close();
 				}
 				
 				return;
